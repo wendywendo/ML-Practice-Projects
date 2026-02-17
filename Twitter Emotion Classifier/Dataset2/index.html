@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion classifier</title>
+</head>
+<body>
+    <h1>EMOTION CLASSIFIER (Basic)</h1>
+    
+    <input
+        id="input"
+        type="text"
+        autocomplete="off"
+    />
+
+    <button onclick="classifyText()">Classify</button>
+
+    <p id="result"></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>
+    
+    <script>
+        const input = document.getElementById('input')
+        const result = document.getElementById('result')
+
+        async function classifyText() {
+            result.textContent = 'Loading...'
+
+            try {
+
+                // create a new session and load the model
+                const session = await ort.InferenceSession.create('./model.onnx');
+
+                const inputTensor = new ort.Tensor('string', [input.value], [1, 1]);
+                
+                // prepare feeds
+                const feeds = { input: inputTensor }
+
+                // feed inputs and run
+                const results = await session.run(feeds)
+
+                const moods = ['sadness', 'joy', 'love', 'anger', 'fear', 'surprise']
+
+                // read from results
+                const moodIndex = results.label.data[0]
+                const mood = moods[moodIndex]
+
+                console.log(mood)
+
+                // set results textContent
+                result.textContent = `Result: ${mood.toUpperCase()}`
+
+            } catch(e) {
+                console.log(`failed to inference ONNX model`);
+                console.error(e)
+                result.textContent = 'Server error!'
+            }
+        }
+    </script>
+</body>
+</html>
